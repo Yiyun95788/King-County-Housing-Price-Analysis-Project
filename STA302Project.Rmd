@@ -1,0 +1,306 @@
+---
+title: "STA302 Project"
+output: pdf_document
+date: "2024-08-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Set CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+# Install required packages
+if (!requireNamespace("tidyr", quietly = TRUE)) {
+  install.packages("tidyr")
+}
+
+# Check if TinyTeX is installed, if not, install it
+if (!tinytex::is_tinytex()) {
+  tinytex::install_tinytex()
+}
+```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+kc_house_data <- read.csv("kc_house_data.csv")
+
+# kc_house_data_subset <- kc_house_data[, 1:10]
+```
+
+
+```{r}
+kc_house_data_subset <- kc_house_data %>%
+  select(price, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view)
+
+# Create a summary table for the numerical variables
+summary_table <- kc_house_data_subset %>%
+  summarize(
+    Min_Price = min(price),
+    Q1_Price = quantile(price, 0.25),
+    Median_Price = median(price),
+    Mean_Price = mean(price),
+    Q3_Price = quantile(price, 0.75),
+    Max_Price = max(price),
+    
+    Min_Bedrooms = min(bedrooms),
+    Q1_Bedrooms = quantile(bedrooms, 0.25),
+    Median_Bedrooms = median(bedrooms),
+    Mean_Bedrooms = mean(bedrooms),
+    Q3_Bedrooms = quantile(bedrooms, 0.75),
+    Max_Bedrooms = max(bedrooms),
+    
+    Min_Bathrooms = min(bathrooms),
+    Q1_Bathrooms = quantile(bathrooms, 0.25),
+    Median_Bathrooms = median(bathrooms),
+    Mean_Bathrooms = mean(bathrooms),
+    Q3_Bathrooms = quantile(bathrooms, 0.75),
+    Max_Bathrooms = max(bathrooms),
+    
+    Min_Sqft_Living = min(sqft_living),
+    Q1_Sqft_Living = quantile(sqft_living, 0.25),
+    Median_Sqft_Living = median(sqft_living),
+    Mean_Sqft_Living = mean(sqft_living),
+    Q3_Sqft_Living = quantile(sqft_living, 0.75),
+    Max_Sqft_Living = max(sqft_living),
+    
+    Min_Sqft_Lot = min(sqft_lot),
+    Q1_Sqft_Lot = quantile(sqft_lot, 0.25),
+    Median_Sqft_Lot = median(sqft_lot),
+    Mean_Sqft_Lot = mean(sqft_lot),
+    Q3_Sqft_Lot = quantile(sqft_lot, 0.75),
+    Max_Sqft_Lot = max(sqft_lot),
+    
+    Min_Floors = min(floors),
+    Q1_Floors = quantile(floors, 0.25),
+    Median_Floors = median(floors),
+    Mean_Floors = mean(floors),
+    Q3_Floors = quantile(floors, 0.75),
+    Max_Floors = max(floors)
+  )
+
+
+# Reshape the summary table to a long format
+summary_table_long <- summary_table %>%
+  pivot_longer(cols = everything(), 
+               names_to = c("Variable", ".value"), 
+               names_pattern = "(.*)_(.*)")
+
+# Display the long-format summary table
+summary_table_long
+```
+
+
+```{r}
+# Histogram of Price with Normal Distribution Overlay
+kc_house_data_subset$log_price <- log(kc_house_data_subset$price)
+
+hist(kc_house_data_subset$log_price, 
+     main = "Histogram of Log-Transformed House Prices", 
+     xlab = "Log(Price)", 
+     ylab = "Count", 
+     col = "lightblue", 
+     border = "black",
+     breaks = 30)
+
+```
+
+```{r}
+library(ggplot2)
+
+# Scatter plot of Price vs Bedrooms
+ggplot(kc_house_data_subset, aes(x = bedrooms, y = log(price))) +
+  geom_point(color = "black") +                      # Scatter plot
+  geom_smooth(method = "lm", color = "blue") +       # Trend line
+  labs(title = "Price vs Bedrooms",
+       x = "Number of Bedrooms",
+       y = "Price ($1000)")
+
+# Scatter plot of Price vs Bathrooms
+ggplot(kc_house_data_subset, aes(x = bathrooms, y = log(price))) +
+  geom_point(color = "black") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Price vs Bathrooms",
+       x = "Number of Bathrooms",
+       y = "Price ($1000)")
+
+# Scatter plot of Price vs Sqft_living
+ggplot(kc_house_data_subset, aes(x = sqft_living, y = log(price))) +
+  geom_point(color = "black") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Price vs Living Area",
+       x = "Living Area (sqft)",
+       y = "Price ($1000)")
+
+# Scatter plot of Price vs Sqft_lot
+ggplot(kc_house_data_subset, aes(x = sqft_lot, y = log(price))) +
+  geom_point(color = "black") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Price vs Lot Area",
+       x = "Lot Size (sqft)",
+       y = "Price ($1000)")
+
+# Scatter plot of Price vs Floors
+ggplot(kc_house_data_subset, aes(x = floors, y = log(price))) +
+  geom_point(color = "black") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Price vs Number of Floors",
+       x = "Number of Floors",
+       y = "Price ($1000)")
+
+```
+
+
+```{r}
+kc_house_data_subset_1 <- kc_house_data_subset %>%
+  mutate(log_price = log(price))
+
+
+# Boxplot of Price vs Waterfront
+boxplot(kc_house_data_subset_1$log_price ~ kc_house_data_subset$waterfront,
+        main = "Price vs Waterfront",
+        xlab = "Waterfront",
+        ylab = "Price (Thousands of Dollars)",
+        col = c("lightblue", "lightgreen"),
+        names = c("No", "Yes"))
+
+# Boxplot of Price vs View
+boxplot(kc_house_data_subset_1$log_price ~ kc_house_data_subset$view,
+        main = "Price vs View",
+        xlab = "View Quality",
+        ylab = "Price (Thousands of Dollars)",
+        col = rainbow(length(unique(kc_house_data_subset$view))),
+        names = c("No View", "Fair", "Average", "Good", "Excellent"))
+
+```
+
+
+```{r}
+# Correlation Matrix
+kc_house_data_subset2 <- kc_house_data[1:10] %>% select(-id, -date)
+
+kc_house_data_subset2$waterfront <- as.factor(kc_house_data_subset2$waterfront)
+kc_house_data_subset2$view <- as.factor(kc_house_data_subset2$view)
+
+kc_house_data_subset_numeric <- kc_house_data_subset2 %>% 
+  mutate(across(where(is.factor), as.numeric))
+
+correlation_matrix <- cor(kc_house_data_subset_numeric)
+print(correlation_matrix)
+
+
+```
+
+```{r}
+if (!requireNamespace("car", quietly = TRUE)) {
+  install.packages("car")
+}
+
+library(car)
+
+```
+
+```{r}
+model0 <- lm(price ~ ., data = kc_house_data_subset2)
+
+# VIF
+vif_values <- vif(model0)
+print(vif_values)
+```
+
+```{r}
+# AIC
+aic_value <- AIC(model0)
+print(aic_value)
+```
+
+```{r}
+kc_house_data_subset <- kc_house_data[1:10] %>% select(-id, -date)
+
+# Log transformation
+kc_house_data_subset$log_price <- log(kc_house_data_subset$price)
+model <- lm(log_price ~ bedrooms + bathrooms + sqft_living + sqft_lot + floors + waterfront + view, data = kc_house_data_subset)
+
+summary(model)
+
+aic_value1 <- AIC(model)
+print(aic_value1)
+
+```
+
+```{r}
+library(ggplot2)
+
+kc_house_data_subset <- kc_house_data %>%
+  select(price, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view)
+
+# Fit the model
+model_initial <- lm(price ~ ., data = kc_house_data_subset)
+model_log <- lm(log(price) ~ ., data = kc_house_data_subset)
+print(model_initial)
+summary(model_log)
+
+```
+
+```{r}
+
+# Residuals vs Fitted plot
+ggplot(data = kc_house_data_subset, aes(x = fitted(model), y = residuals(model))) +
+  geom_point() +
+  # geom_smooth(method = "loess", color = "blue") +
+  labs(title = "Residuals vs Fitted",
+       x = "Fitted values",
+       y = "Residuals")
+
+ggplot(data = kc_house_data_subset, aes(x = bedrooms, y = residuals(model))) +
+  geom_point() +
+  # geom_smooth(method = "loess", color = "blue") +
+  labs(title = "Residuals vs Bedrooms",
+       x = "Number of Bedrooms",
+       y = "Residuals")
+
+ggplot(data = kc_house_data_subset, aes(x = bathrooms, y = residuals(model))) +
+  geom_point() +
+  # geom_smooth(method = "loess", color = "blue") +
+  labs(title = "Residuals vs Bathrooms",
+       x = "Number of Bathrooms",
+       y = "Residuals")
+
+ggplot(data = kc_house_data_subset, aes(x = sqft_living, y = residuals(model))) +
+  geom_point() +
+  # geom_smooth(method = "loess", color = "blue") +
+  labs(title = "Residuals vs Living Area",
+       x = "Living Area (square footage)",
+       y = "Residuals")
+
+ggplot(data = kc_house_data_subset, aes(x = sqft_lot, y = residuals(model))) +
+  geom_point() +
+  # geom_smooth(method = "loess", color = "blue") +
+  labs(title = "Residuals vs Lot Area",
+       x = "Lot Area (square footage)",
+       y = "Residuals")
+
+ggplot(data = kc_house_data_subset, aes(x = floors, y = residuals(model))) +
+  geom_point() +
+  # geom_smooth(method = "loess", color = "blue") +
+  labs(title = "Residuals vs Floors",
+       x = "Number of Floors",
+       y = "Residuals")
+
+```
+
+```{r}
+# Normal Q-Q plot
+ggplot(data = kc_house_data_subset, aes(sample = residuals(model))) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Normal Q-Q Plot",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles")
+
+```
